@@ -17,18 +17,26 @@ public class Main {
             System.out.print("Choose an option: ");
 
             try {
-                int choice = Integer.parseInt(scanner.nextLine());
+                int choice = Integer.parseInt(scanner.nextLine().trim());
 
                 switch (choice) {
                     case 1:
                         System.out.print("Enter ID: ");
-                        String id = scanner.nextLine();
+                        String id = scanner.nextLine().trim();
+                        if (id.isEmpty()) {
+                            System.out.println("Error: Student ID cannot be empty.");
+                            break;
+                        }
+                        if (manager.isIdPresent(id)) {
+                            System.out.println("Error: Student ID " + id + " already exists.");
+                            break;
+                        }
                         System.out.print("Enter Name: ");
-                        String name = scanner.nextLine();
+                        String name = scanner.nextLine().trim();
                         System.out.print("Enter Age: ");
-                        int age = Integer.parseInt(scanner.nextLine());
+                        int age = Integer.parseInt(scanner.nextLine().trim());
                         System.out.print("Enter Course: ");
-                        String course = scanner.nextLine();
+                        String course = scanner.nextLine().trim();
 
                         manager.addStudent(new Student(id, name, age, course));
                         break;
@@ -39,20 +47,32 @@ public class Main {
 
                     case 3:
                         System.out.print("Enter Student ID to update: ");
-                        String updateId = scanner.nextLine();
+                        String updateId = scanner.nextLine().trim();
+                        if (updateId.isEmpty()) {
+                            System.out.println("Error: Student ID cannot be empty.");
+                            break;
+                        }
+                        if (!manager.isIdPresent(updateId)) {
+                            System.out.println("Student ID " + updateId + " not found.");
+                            break;
+                        }
                         System.out.print("Enter New Name: ");
-                        String newName = scanner.nextLine();
+                        String newName = scanner.nextLine().trim();
                         System.out.print("Enter New Age: ");
-                        int newAge = Integer.parseInt(scanner.nextLine());
+                        int newAge = Integer.parseInt(scanner.nextLine().trim());
                         System.out.print("Enter New Course: ");
-                        String newCourse = scanner.nextLine();
+                        String newCourse = scanner.nextLine().trim();
 
                         manager.updateStudent(updateId, newName, newAge, newCourse);
                         break;
 
                     case 4:
                         System.out.print("Enter Student ID to delete: ");
-                        String deleteId = scanner.nextLine();
+                        String deleteId = scanner.nextLine().trim();
+                        if (deleteId.isEmpty()) {
+                            System.out.println("Error: Student ID cannot be empty.");
+                            break;
+                        }
 
                         manager.deleteStudent(deleteId);
                         break;
@@ -67,6 +87,8 @@ public class Main {
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a valid number.");
+            } catch (IllegalArgumentException e) {
+                System.out.println("Validation error: " + e.getMessage());
             }
         }
 

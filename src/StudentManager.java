@@ -10,10 +10,27 @@ public class StudentManager {
         loadStudents();
     }
 
+    public boolean isIdPresent(String id) {
+        for (Student s : students) {
+            if (s.getId().equalsIgnoreCase(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void addStudent(Student student) {
+        if (isIdPresent(student.getId())) {
+            System.out.println("Error: Student ID " + student.getId() + " already exists.");
+            return;
+        }
         students.add(student);
-        saveStudents();
-        System.out.println("Student added successfully.");
+        if (saveStudents()) {
+            System.out.println("Student added successfully.");
+        } else {
+            students.remove(student);
+            System.out.println("Failed to save. Student was not added.");
+        }
     }
 
     public void viewStudents() {
@@ -29,12 +46,31 @@ public class StudentManager {
 
     public void updateStudent(String id, String newName, int newAge, String newCourse) {
         for (Student s : students) {
-            if (s.getId().equals(id)) {
-                s.setName(newName);
-                s.setAge(newAge);
-                s.setCourse(newCourse);
-                saveStudents();
-                System.out.println("Student updated successfully.");
+            if (s.getId().equalsIgnoreCase(id)) {
+                String oldName = s.getName();
+                int oldAge = s.getAge();
+                String oldCourse = s.getCourse();
+
+                try {
+                    s.setName(newName);
+                    s.setAge(newAge);
+                    s.setCourse(newCourse);
+                } catch (IllegalArgumentException e) {
+                    s.setName(oldName);
+                    s.setAge(oldAge);
+                    s.setCourse(oldCourse);
+                    System.out.println("Invalid input: " + e.getMessage());
+                    return;
+                }
+
+                if (saveStudents()) {
+                    System.out.println("Student updated successfully.");
+                } else {
+                    s.setName(oldName);
+                    s.setAge(oldAge);
+                    s.setCourse(oldCourse);
+                    System.out.println("Failed to save. Update cancelled.");
+                }
                 return;
             }
         }
@@ -45,26 +81,30 @@ public class StudentManager {
         Iterator<Student> iterator = students.iterator();
         while (iterator.hasNext()) {
             Student s = iterator.next();
-            if (s.getId().equals(id)) {
+            if (s.getId().equalsIgnoreCase(id)) {
                 iterator.remove();
-                saveStudents();
-                System.out.println("Student deleted successfully.");
+                if (saveStudents()) {
+                    System.out.println("Student deleted successfully.");
+                } else {
+                    students.add(s);
+                    System.out.println("Failed to save. Delete cancelled.");
+                }
                 return;
             }
         }
         System.out.println("Student ID " + id + " not found.");
     }
 
-    private void saveStudents() {
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME));
+    private boolean saveStudents() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
             for (Student s : students) {
                 writer.write(s.getId() + "," + s.getName() + "," + s.getAge() + "," + s.getCourse());
                 writer.newLine();
             }
-            writer.close();
+            return true;
         } catch (IOException e) {
             System.out.println("Error saving data: " + e.getMessage());
+            return false;
         }
     }
 
@@ -73,20 +113,32 @@ public class StudentManager {
         if (!file.exists()) {
             return;
         }
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
                 String[] parts = line.split(",");
-                if (parts.length == 4) {
-                    String id = parts[0];
-                    String name = parts[1];
-                    int age = Integer.parseInt(parts[2]);
-                    String course = parts[3];
+                if (parts.length != 4) {
+                    System.out.println("Skipping invalid line: " + line);
+                    continue;
+                }
+                try {
+                    String id = parts[0].trim();
+                    String name = parts[1].trim();
+                    int age = Integer.parseInt(parts[2].trim());
+                    String course = parts[3].trim();
+
+                    if (isIdPresent(id)) {
+                        System.out.println("Skipping duplicate ID: " + id);
+                        continue;
+                    }
                     students.add(new Student(id, name, age, course));
+                } catch (Exception e) {
+                    System.out.println("Skipping corrupted record: " + line);
                 }
             }
-            reader.close();
         } catch (IOException e) {
             System.out.println("Error loading data: " + e.getMessage());
         }

@@ -18,6 +18,7 @@ A console-based Java application for managing student records with persistent fi
 ```bash
 javac src/*.java
 java -cp src Main
+```
 
 ## Recent Updates (After GUVI Evaluator feedback for Redo)
 

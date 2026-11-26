@@ -18,3 +18,11 @@ A console-based Java application for managing student records with persistent fi
 ```bash
 javac src/*.java
 java -cp src Main
+
+## Recent Updates (After GUVI Evaluator feedback for Redo)
+
+- **Duplicate ID Prevention:** Added case-insensitive duplicate ID checks when adding new records and loading from `students.txt`.
+- **Input & Field Validation:** Enforced validation in `Student` and `Main` to block empty inputs, commas in fields, invalid names (letters and spaces only), and out-of-range ages (5–100).
+- **Safe File Handling:** Updated file read/write operations in `StudentManager` to use `try-with-resources` so streams close automatically.
+- **Fault-Tolerant Loading:** Added per-line validation and error handling when reading `students.txt` to skip malformed or duplicate lines without interrupting startup.
+- **Data Consistency:** Added rollback logic for add, update, and delete operations so in-memory `ArrayList` changes are reverted if saving to `students.txt` fails.
